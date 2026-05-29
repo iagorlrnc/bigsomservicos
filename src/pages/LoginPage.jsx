@@ -1,189 +1,227 @@
-import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { supabase } from '../lib/supabaseClient';
-import FormField from '../components/FormField';
-import Input from '../components/Input';
+import { useState } from "react"
+import { useAuth } from "../context/AuthContext"
+import { supabase } from "../lib/supabaseClient"
+import FormField from "../components/FormField"
+import Input from "../components/Input"
+import bigsomLogo from "../public/assets/bigsomlogo.png"
 
 export default function LoginPage() {
-  const { login, signUp } = useAuth();
-  const [mode, setMode] = useState("login"); // "login" | "register" | "pending"
-  
-  // Login fields
-  const [email, setEmail] = useState("");
-  const [pass, setPass] = useState("");
-  
-  // Registration fields
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [confirmPass, setConfirmPass] = useState("");
-  
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState("");
+  const { login, signUp } = useAuth()
+  const [mode, setMode] = useState("login") // "login" | "register" | "pending"
 
-  const isSupabaseConfigured = 
-    import.meta.env.VITE_SUPABASE_URL && 
-    import.meta.env.VITE_SUPABASE_URL.indexOf('your-project-id') === -1 &&
+  // Login fields
+  const [email, setEmail] = useState("")
+  const [pass, setPass] = useState("")
+
+  // Registration fields
+  const [name, setName] = useState("")
+  const [phone, setPhone] = useState("")
+  const [confirmPass, setConfirmPass] = useState("")
+
+  const [loading, setLoading] = useState(false)
+  const [err, setErr] = useState("")
+
+  const isSupabaseConfigured =
+    import.meta.env.VITE_SUPABASE_URL &&
+    import.meta.env.VITE_SUPABASE_URL.indexOf("your-project-id") === -1 &&
     import.meta.env.VITE_SUPABASE_ANON_KEY &&
-    import.meta.env.VITE_SUPABASE_ANON_KEY.indexOf('your-anon-key') === -1;
+    import.meta.env.VITE_SUPABASE_ANON_KEY.indexOf("your-anon-key") === -1
 
   const getOfflineUsers = () => {
-    const stored = localStorage.getItem("offline_users");
-    if (stored) return JSON.parse(stored);
-    
+    const stored = localStorage.getItem("offline_users")
+    if (stored) return JSON.parse(stored)
+
     const defaultUsers = [
-      { email: "admin@bigsom.com", password: "bigsom2024", name: "Administrador", role: "admin", approved: true },
-      { email: "colaborador@bigsom.com", password: "colaborador2024", name: "Colaborador Padrão", role: "colaborador", approved: true }
-    ];
-    localStorage.setItem("offline_users", JSON.stringify(defaultUsers));
-    return defaultUsers;
-  };
+      {
+        email: "admin@bigsom.com",
+        password: "bigsom2024",
+        name: "Administrador",
+        role: "admin",
+        approved: true,
+      },
+      {
+        email: "colaborador@bigsom.com",
+        password: "colaborador2024",
+        name: "Colaborador Padrão",
+        role: "colaborador",
+        approved: true,
+      },
+    ]
+    localStorage.setItem("offline_users", JSON.stringify(defaultUsers))
+    return defaultUsers
+  }
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setErr("");
-    
+    e.preventDefault()
+    setLoading(true)
+    setErr("")
+
     if (isSupabaseConfigured) {
       try {
-        await login(email, pass);
+        await login(email, pass)
       } catch (err) {
-        console.error("Erro ao autenticar via Supabase:", err);
-        setErr(err.message || "Credenciais inválidas ou erro de conexão.");
+        console.error("Erro ao autenticar via Supabase:", err)
+        setErr(err.message || "Credenciais inválidas ou erro de conexão.")
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     } else {
       // Offline fallback login
-      const localUsers = getOfflineUsers();
-      const found = localUsers.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === pass);
+      const localUsers = getOfflineUsers()
+      const found = localUsers.find(
+        (u) =>
+          u.email.toLowerCase() === email.toLowerCase() && u.password === pass,
+      )
       if (found) {
         if (!found.approved) {
-          setErr("Sua conta está pendente de aprovação pelo administrador.");
-          setLoading(false);
-          return;
+          setErr("Sua conta está pendente de aprovação pelo administrador.")
+          setLoading(false)
+          return
         }
-        sessionStorage.setItem("offline_auth", "true");
-        sessionStorage.setItem("offline_role", found.role);
-        sessionStorage.setItem("offline_email", found.email);
-        window.location.reload();
+        sessionStorage.setItem("offline_auth", "true")
+        sessionStorage.setItem("offline_role", found.role)
+        sessionStorage.setItem("offline_email", found.email)
+        window.location.reload()
       } else {
-        setErr("Credenciais inválidas.");
-        setLoading(false);
+        setErr("Credenciais inválidas.")
+        setLoading(false)
       }
     }
-  };
+  }
 
   const handleRegister = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setErr("");
-    
+    e.preventDefault()
+    setLoading(true)
+    setErr("")
+
     if (!name || !email || !pass || !confirmPass) {
-      setErr("Por favor, preencha todos os campos obrigatórios.");
-      setLoading(false);
-      return;
+      setErr("Por favor, preencha todos os campos obrigatórios.")
+      setLoading(false)
+      return
     }
-    
+
     if (pass !== confirmPass) {
-      setErr("As senhas não coincidem.");
-      setLoading(false);
-      return;
+      setErr("As senhas não coincidem.")
+      setLoading(false)
+      return
     }
-    
+
     if (isSupabaseConfigured) {
       try {
         // 1. Criar usuário no Supabase Auth
-        const signUpData = await signUp(email, pass);
-        const user = signUpData?.user;
-        if (!user) throw new Error("Erro ao criar usuário.");
-        
+        const signUpData = await signUp(email, pass)
+        const user = signUpData?.user
+        if (!user) throw new Error("Erro ao criar usuário.")
+
         // 2. Criar registro do colaborador
         const { error: profileError } = await supabase
-          .from('collaborators')
-          .insert([{
-            user_id: user.id,
-            email: email,
-            name: name,
-            phone: phone,
-            user_role: 'colaborador',
-            approved: false
-          }]);
-          
-        if (profileError) throw profileError;
-        
+          .from("collaborators")
+          .insert([
+            {
+              user_id: user.id,
+              email: email,
+              name: name,
+              phone: phone,
+              user_role: "colaborador",
+              approved: false,
+            },
+          ])
+
+        if (profileError) throw profileError
+
         // Deslogar imediatamente já que o signUp pode logar o usuário automaticamente no client
-        await supabase.auth.signOut();
-        setMode("pending");
+        await supabase.auth.signOut()
+        setMode("pending")
       } catch (err) {
-        console.error("Erro no cadastro:", err);
-        setErr(err.message || "Erro ao realizar cadastro.");
+        console.error("Erro no cadastro:", err)
+        setErr(err.message || "Erro ao realizar cadastro.")
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     } else {
       // Offline mock registration
       try {
-        const localUsers = getOfflineUsers();
-        if (localUsers.some(u => u.email.toLowerCase() === email.toLowerCase())) {
-          setErr("Este e-mail já está cadastrado.");
-          setLoading(false);
-          return;
+        const localUsers = getOfflineUsers()
+        if (
+          localUsers.some((u) => u.email.toLowerCase() === email.toLowerCase())
+        ) {
+          setErr("Este e-mail já está cadastrado.")
+          setLoading(false)
+          return
         }
-        
+
         localUsers.push({
           email,
           password: pass,
           name,
           phone,
-          role: 'colaborador',
-          approved: false
-        });
-        
-        localStorage.setItem("offline_users", JSON.stringify(localUsers));
-        
-        const offlineCollabs = JSON.parse(localStorage.getItem("offline_collaborators") || "[]");
+          role: "colaborador",
+          approved: false,
+        })
+
+        localStorage.setItem("offline_users", JSON.stringify(localUsers))
+
+        const offlineCollabs = JSON.parse(
+          localStorage.getItem("offline_collaborators") || "[]",
+        )
         offlineCollabs.push({
           id: Date.now().toString(),
           name,
-          role: 'Pendente',
+          role: "Pendente",
           phone,
-          user_role: 'colaborador',
+          user_role: "colaborador",
           email,
-          approved: false
-        });
-        localStorage.setItem("offline_collaborators", JSON.stringify(offlineCollabs));
-        
-        setMode("pending");
-      } catch (err) {
-        setErr("Erro ao salvar cadastro.");
+          approved: false,
+        })
+        localStorage.setItem(
+          "offline_collaborators",
+          JSON.stringify(offlineCollabs),
+        )
+
+        setMode("pending")
+      } catch {
+        setErr("Erro ao salvar cadastro.")
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-[#050505] flex items-center justify-center p-5">
       <div className="w-full max-w-[380px]">
-        <div className="text-center mb-10">
-          <div className="w-14 h-14 rounded-2xl bg-white inline-flex items-center justify-center font-black text-xl text-black mb-4">
-            BS
-          </div>
-          <h1 className="text-white text-2xl font-bold tracking-tight">BIGSOM</h1>
-          <p className="text-neutral-500 text-xs tracking-widest uppercase mt-1">Oficina Automotiva</p>
+        <div className="text-center mb-5">
+          <img
+            src={bigsomLogo}
+            alt="BigSom"
+            className="mx-auto mb-4 w-30 max-w-full object-contain"
+          />
         </div>
 
         {mode === "login" && (
-          <form onSubmit={handleLogin} className="bg-[#0d0d0d] border border-neutral-900 rounded-2xl p-7">
+          <form
+            onSubmit={handleLogin}
+            className="bg-[#0d0d0d] border border-neutral-900 rounded-2xl p-7"
+          >
             <FormField label="E-mail">
-              <Input value={email} onChange={e => setEmail(e.target.value)} type="email" required />
+              <Input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                type="email"
+                required
+              />
             </FormField>
             <FormField label="Senha">
-              <Input value={pass} onChange={e => setPass(e.target.value)} type="password" required />
+              <Input
+                value={pass}
+                onChange={(e) => setPass(e.target.value)}
+                type="password"
+                required
+              />
             </FormField>
-            
+
             {err && <p className="text-[#d93434] text-xs mb-3">{err}</p>}
-            
+
             <button
               type="submit"
               disabled={loading}
@@ -191,14 +229,17 @@ export default function LoginPage() {
             >
               {loading ? "Entrando..." : "Entrar"}
             </button>
-            
+
             <div className="flex flex-col gap-2.5 items-center mt-4 text-xs">
               <button
                 type="button"
-                onClick={() => { setMode("register"); setErr(""); }}
+                onClick={() => {
+                  setMode("register")
+                  setErr("")
+                }}
                 className="text-neutral-400 hover:text-white transition-colors cursor-pointer bg-transparent border-none outline-none font-medium"
               >
-                Criar uma conta (Cadastrar)
+                Criar uma conta
               </button>
               <button
                 type="button"
@@ -211,30 +252,64 @@ export default function LoginPage() {
         )}
 
         {mode === "register" && (
-          <form onSubmit={handleRegister} className="bg-[#0d0d0d] border border-neutral-900 rounded-2xl p-7 space-y-4">
+          <form
+            onSubmit={handleRegister}
+            className="bg-[#0d0d0d] border border-neutral-900 rounded-2xl p-7 space-y-4"
+          >
             <div className="mb-2">
-              <h2 className="text-white text-base font-bold">Cadastrar Conta</h2>
-              <p className="text-neutral-500 text-[11px] mt-0.5">Preencha seus dados para solicitar acesso.</p>
+              <h2 className="text-white text-base font-bold">
+                Cadastrar Conta
+              </h2>
+              <p className="text-neutral-500 text-[11px] mt-0.5">
+                Preencha seus dados para solicitar acesso.
+              </p>
             </div>
-            
+
             <FormField label="Nome Completo" required>
-              <Input value={name} onChange={e => setName(e.target.value)} type="text" placeholder="Ex: João Silva" required />
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                type="text"
+                placeholder="Ex: João Silva"
+                required
+              />
             </FormField>
             <FormField label="E-mail" required>
-              <Input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="seu-email@dominio.com" required />
+              <Input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                type="email"
+                placeholder="seu-email@dominio.com"
+                required
+              />
             </FormField>
             <FormField label="Telefone">
-              <Input value={phone} onChange={e => setPhone(e.target.value)} type="text" placeholder="(63) 99999-0000" />
+              <Input
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                type="text"
+                placeholder="(63) 99999-0000"
+              />
             </FormField>
             <FormField label="Senha" required>
-              <Input value={pass} onChange={e => setPass(e.target.value)} type="password" required />
+              <Input
+                value={pass}
+                onChange={(e) => setPass(e.target.value)}
+                type="password"
+                required
+              />
             </FormField>
             <FormField label="Confirmar Senha" required>
-              <Input value={confirmPass} onChange={e => setConfirmPass(e.target.value)} type="password" required />
+              <Input
+                value={confirmPass}
+                onChange={(e) => setConfirmPass(e.target.value)}
+                type="password"
+                required
+              />
             </FormField>
-            
+
             {err && <p className="text-[#d93434] text-xs pt-1">{err}</p>}
-            
+
             <button
               type="submit"
               disabled={loading}
@@ -242,11 +317,14 @@ export default function LoginPage() {
             >
               {loading ? "Cadastrando..." : "Solicitar Cadastro"}
             </button>
-            
+
             <div className="text-center mt-2">
               <button
                 type="button"
-                onClick={() => { setMode("login"); setErr(""); }}
+                onClick={() => {
+                  setMode("login")
+                  setErr("")
+                }}
                 className="text-neutral-450 hover:text-white text-xs transition-colors cursor-pointer bg-transparent border-none outline-none font-medium"
               >
                 ← Voltar para o Login
@@ -260,16 +338,28 @@ export default function LoginPage() {
             <div className="w-12 h-12 rounded-full bg-[#1c1917] text-amber-500 flex items-center justify-center text-xl mx-auto mb-2">
               ⏳
             </div>
-            <h2 className="text-white text-base font-bold">Solicitação Enviada!</h2>
+            <h2 className="text-white text-base font-bold">
+              Solicitação Enviada!
+            </h2>
             <p className="text-neutral-400 text-xs leading-relaxed">
-              Sua conta foi criada, mas precisa ser **aprovada por um administrador** antes que você possa acessar o sistema.
+              Sua conta foi criada, mas precisa ser **aprovada por um
+              administrador** antes que você possa acessar o sistema.
             </p>
             <p className="text-neutral-500 text-[11px] leading-relaxed">
-              Por favor, contate o gerente ou o administrador da BigSom para liberar seu acesso.
+              Por favor, contate o gerente ou o administrador da BigSom para
+              liberar seu acesso.
             </p>
-            
+
             <button
-              onClick={() => { setMode("login"); setErr(""); setEmail(""); setPass(""); setName(""); setPhone(""); setConfirmPass(""); }}
+              onClick={() => {
+                setMode("login")
+                setErr("")
+                setEmail("")
+                setPass("")
+                setName("")
+                setPhone("")
+                setConfirmPass("")
+              }}
               className="w-full bg-white text-black hover:bg-neutral-250 transition-all rounded-lg py-2.5 text-xs font-semibold cursor-pointer mt-4"
             >
               Voltar para o Login
@@ -278,5 +368,5 @@ export default function LoginPage() {
         )}
       </div>
     </div>
-  );
+  )
 }

@@ -5,7 +5,7 @@ import Input from './Input';
 
 const SERVICE_TYPES = ["Instalação de Som", "Troca de Alto Falantes", "Instalação Multimídia", "Insulfilm", "Elétrica Automotiva", "LED Automotivo", "Outro"];
 
-export default function ServiceFormModal({ vehicleId, onClose, onSave, collaborators = [] }) {
+export default function ServiceFormModal({ onClose, onSave, collaborators = [] }) {
   const [form, setForm] = useState({ name: "", description: "", value: "", responsible: "", status: "aguardando" });
   const ok = form.name && form.value;
 
