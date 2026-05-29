@@ -276,11 +276,6 @@ export default function LoginPage() {
             </button>
           </div>
         )}
-
-        <p className="text-neutral-700 text-[10px] text-center mt-5 leading-relaxed">
-          Admin: admin@bigsom.com · bigsom2024 <br />
-          Colaborador: colaborador@bigsom.com · colaborador2024
-        </p>
       </div>
     </div>
   );
