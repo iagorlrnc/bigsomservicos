@@ -8,11 +8,13 @@ export default function CollaboratorPage({
   services,
   updateService,
   addToast,
+  collaboratorName,
 }) {
   const { logout } = useAuth()
   const { plate } = useParams()
   const navigate = useNavigate()
   const [search, setSearch] = useState("")
+  const [serviceView, setServiceView] = useState("all")
 
   const handleLogout = async () => {
     try {
@@ -30,8 +32,15 @@ export default function CollaboratorPage({
   }
 
   // Filtrar veículos que possuem pelo menos um serviço cadastrado
+  const assignedServices = collaboratorName
+    ? services.filter((s) => s.responsible === collaboratorName)
+    : []
+
+  const visibleServices =
+    serviceView === "assigned" ? assignedServices : services
+
   const vehiclesWithServices = vehicles.filter((v) => {
-    const vServices = services.filter((s) => s.vehicle_id === v.id)
+    const vServices = visibleServices.filter((s) => s.vehicle_id === v.id)
     return vServices.length > 0
   })
 
@@ -71,8 +80,11 @@ export default function CollaboratorPage({
       )
     : null
   const activeServices = activeVehicle
-    ? services.filter((s) => s.vehicle_id === activeVehicle.id)
+    ? visibleServices.filter((s) => s.vehicle_id === activeVehicle.id)
     : []
+
+  const totalCount = services.length
+  const assignedCount = assignedServices.length
 
   const handleSelectVehicle = (v) => {
     const cleanPlate = v.plate.replace("-", "").toUpperCase()
@@ -114,11 +126,35 @@ export default function CollaboratorPage({
           className={`space-y-4 ${activeVehicle ? "hidden md:block" : "block"}`}
         >
           <div>
+            <div className="flex gap-2 mb-3">
+              <button
+                onClick={() => setServiceView("all")}
+                className={`px-4 py-2 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                  serviceView === "all"
+                    ? "bg-white border-white text-black"
+                    : "bg-[#0d0d0d] border-neutral-900 text-neutral-500 hover:text-neutral-300 hover:border-neutral-800"
+                }`}
+              >
+                Total ({totalCount})
+              </button>
+              <button
+                onClick={() => setServiceView("assigned")}
+                className={`px-4 py-2 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                  serviceView === "assigned"
+                    ? "bg-white border-white text-black"
+                    : "bg-[#0d0d0d] border-neutral-900 text-neutral-500 hover:text-neutral-300 hover:border-neutral-800"
+                }`}
+              >
+                Atribuídos ({assignedCount})
+              </button>
+            </div>
             <h2 className="text-white font-semibold text-sm mb-1">
               Veículos em Manutenção
             </h2>
             <p className="text-neutral-500 text-xs">
-              Selecione um veículo para ver e marcar os serviços.
+              {serviceView === "assigned"
+                ? "Mostrando apenas os serviços atribuídos a você."
+                : "Selecione um veículo para ver e marcar os serviços."}
             </p>
           </div>
 
@@ -131,7 +167,9 @@ export default function CollaboratorPage({
 
           <div className="space-y-2.5 max-h-[70vh] overflow-y-auto pr-1">
             {filteredVehicles.map((v) => {
-              const vServices = services.filter((s) => s.vehicle_id === v.id)
+              const vServices = visibleServices.filter(
+                (s) => s.vehicle_id === v.id,
+              )
               const doneCount = vServices.filter(
                 (s) => s.status === "finalizado",
               ).length
@@ -188,7 +226,7 @@ export default function CollaboratorPage({
 
             {filteredVehicles.length === 0 && (
               <div className="text-center py-12 text-neutral-650 text-xs bg-[#0d0d0d] border border-neutral-900 rounded-xl">
-                Nenhum veículo encontrado ou com serviços ativos.
+                Nenhum veículo encontrado ou com serviços visíveis.
               </div>
             )}
           </div>

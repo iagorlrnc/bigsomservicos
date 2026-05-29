@@ -86,7 +86,7 @@ export default function ServicesPage({
                   Veículo
                 </th>
                 <th className="px-5 py-3.5 text-[10px] text-neutral-600 font-bold uppercase tracking-wider hidden sm:table-cell">
-                  Proprietário
+                  Responsável
                 </th>
                 <th className="px-5 py-3.5 text-[10px] text-neutral-600 font-bold uppercase tracking-wider">
                   Valor
@@ -142,7 +142,7 @@ export default function ServicesPage({
                       )}
                     </td>
                     <td className="px-5 py-4 text-neutral-500 font-medium hidden sm:table-cell">
-                      {v?.owner_name || "-"}
+                      {s.responsible || "-"}
                     </td>
                     <td className="px-5 py-4 text-amber-500 font-bold">
                       {fmtCurrency(s.value)}

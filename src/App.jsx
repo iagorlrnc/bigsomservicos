@@ -586,6 +586,15 @@ function AppContent() {
   }
 
   const myCollabProfile = collaborators.find((c) => c.user_id === user?.id)
+  const offlineEmail = sessionStorage.getItem("offline_email") || ""
+  const currentCollaboratorName =
+    myCollabProfile?.name ||
+    (!isSupabaseConfigured && offlineEmail
+      ? collaborators.find(
+          (c) =>
+            c.email && c.email.toLowerCase() === offlineEmail.toLowerCase(),
+        )?.name
+      : "")
   const isApproved =
     !user ||
     user.email === "admin@bigsom.com" ||
@@ -664,6 +673,7 @@ function AppContent() {
                 services={collabActiveServices}
                 updateService={handleUpdateService}
                 addToast={addToast}
+                collaboratorName={currentCollaboratorName}
               />
             }
           />
@@ -675,6 +685,7 @@ function AppContent() {
                 services={collabActiveServices}
                 updateService={handleUpdateService}
                 addToast={addToast}
+                collaboratorName={currentCollaboratorName}
               />
             }
           />
