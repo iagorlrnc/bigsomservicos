@@ -49,7 +49,7 @@ export default function ServiceCard({
             </div>
 
             <div className="flex items-center justify-end gap-2 flex-wrap sm:flex-nowrap">
-              {(onEdit || onDelete) && (
+              {!done && (onEdit || onDelete) && (
                 <div className="flex items-center gap-2 flex-wrap justify-end">
                   {onEdit && (
                     <button

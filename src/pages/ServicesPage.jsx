@@ -208,18 +208,22 @@ export default function ServicesPage({
                     </td>
                     <td className="px-5 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => handleEdit(s)}
-                          className="px-3.5 py-1.5 rounded-lg text-[10px] font-semibold border cursor-pointer transition-all bg-neutral-900 border-neutral-800 text-neutral-300 hover:bg-neutral-850 hover:text-white"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => handleCancelService(s)}
-                          className="px-3.5 py-1.5 rounded-lg text-[10px] font-semibold border cursor-pointer transition-all bg-[#3b1111] border-red-900/30 text-red-300 hover:bg-red-950/30 hover:text-red-200"
-                        >
-                          Cancelar
-                        </button>
+                        {s.status !== "finalizado" && (
+                          <>
+                            <button
+                              onClick={() => handleEdit(s)}
+                              className="px-3.5 py-1.5 rounded-lg text-[10px] font-semibold border cursor-pointer transition-all bg-neutral-900 border-neutral-800 text-neutral-300 hover:bg-neutral-850 hover:text-white"
+                            >
+                              Editar
+                            </button>
+                            <button
+                              onClick={() => handleCancelService(s)}
+                              className="px-3.5 py-1.5 rounded-lg text-[10px] font-semibold border cursor-pointer transition-all bg-[#3b1111] border-red-900/30 text-red-300 hover:bg-red-950/30 hover:text-red-200"
+                            >
+                              Cancelar
+                            </button>
+                          </>
+                        )}
                         <button
                           onClick={() => handleToggle(s)}
                           className={`px-3.5 py-1.5 rounded-lg text-[10px] font-semibold border cursor-pointer transition-all ${
