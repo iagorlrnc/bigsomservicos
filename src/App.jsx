@@ -323,6 +323,24 @@ function AppContent() {
     }
   }
 
+  const handleUpdateVehicle = async (id, updates) => {
+    if (isSupabaseConfigured) {
+      const { error } = await supabase
+        .from("vehicles")
+        .update(updates)
+        .eq("id", id)
+
+      if (error) throw error
+      setVehicles((prev) =>
+        prev.map((v) => (v.id === id ? { ...v, ...updates } : v)),
+      )
+    } else {
+      setVehicles((prev) =>
+        prev.map((v) => (v.id === id ? { ...v, ...updates } : v)),
+      )
+    }
+  }
+
   const handleArchiveVehicle = async (id) => {
     if (isSupabaseConfigured) {
       const { error } = await supabase
@@ -348,6 +366,26 @@ function AppContent() {
         "offline_archived_vehicles",
         JSON.stringify(archivedList),
       )
+    }
+  }
+
+  const handleDeleteVehicle = async (id) => {
+    if (isSupabaseConfigured) {
+      const { error: servicesError } = await supabase
+        .from("services")
+        .delete()
+        .eq("vehicle_id", id)
+
+      if (servicesError) throw servicesError
+
+      const { error } = await supabase.from("vehicles").delete().eq("id", id)
+
+      if (error) throw error
+      setVehicles((prev) => prev.filter((v) => v.id !== id))
+      setServices((prev) => prev.filter((s) => s.vehicle_id !== id))
+    } else {
+      setVehicles((prev) => prev.filter((v) => v.id !== id))
+      setServices((prev) => prev.filter((s) => s.vehicle_id !== id))
     }
   }
 
@@ -400,6 +438,17 @@ function AppContent() {
       setServices((prev) =>
         prev.map((s) => (s.id === id ? { ...s, ...updates } : s)),
       )
+    }
+  }
+
+  const handleDeleteService = async (id) => {
+    if (isSupabaseConfigured) {
+      const { error } = await supabase.from("services").delete().eq("id", id)
+
+      if (error) throw error
+      setServices((prev) => prev.filter((s) => s.id !== id))
+    } else {
+      setServices((prev) => prev.filter((s) => s.id !== id))
     }
   }
 
@@ -722,8 +771,11 @@ function AppContent() {
     collaborators: approvedCollaborators,
     addToast,
     addVehicle: handleAddVehicle,
+    updateVehicle: handleUpdateVehicle,
+    deleteVehicle: handleDeleteVehicle,
     addService: handleAddService,
     updateService: handleUpdateService,
+    deleteService: handleDeleteService,
     addCollaborator: handleAddCollaborator,
     archiveVehicle: handleArchiveVehicle,
     dbLoading,

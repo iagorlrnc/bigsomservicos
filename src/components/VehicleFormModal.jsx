@@ -3,16 +3,29 @@ import ModalOverlay from "./ModalOverlay"
 import FormField from "./FormField"
 import Input from "./Input"
 
-export default function VehicleFormModal({ onClose, onSave }) {
-  const [form, setForm] = useState({
-    plate: "",
-    brand: "",
-    model: "",
-    year: "",
-    color: "",
-    owner_name: "",
-    owner_phone: "",
-  })
+function buildVehicleForm(initialVehicle) {
+  return {
+    plate: initialVehicle?.plate || "",
+    brand: initialVehicle?.brand || "",
+    model: initialVehicle?.model || "",
+    year:
+      initialVehicle?.year === undefined || initialVehicle?.year === null
+        ? ""
+        : String(initialVehicle.year),
+    color: initialVehicle?.color || "",
+    owner_name: initialVehicle?.owner_name || "",
+    owner_phone: initialVehicle?.owner_phone || "",
+  }
+}
+
+function VehicleFormModalContent({
+  onClose,
+  onSave,
+  initialVehicle = null,
+  title = "Cadastrar Veículo",
+  submitLabel = "Salvar Veículo",
+}) {
+  const [form, setForm] = useState(() => buildVehicleForm(initialVehicle))
 
   const formatPlate = (val) => {
     const clean = val
@@ -45,9 +58,7 @@ export default function VehicleFormModal({ onClose, onSave }) {
     <ModalOverlay onClose={onClose}>
       <div className="bg-[#0d0d0d] border border-neutral-900 rounded-2xl p-5 sm:p-7 w-full max-w-[520px] max-h-[calc(100vh-3rem)] overflow-y-auto animate-scale-up">
         <div className="flex justify-between items-center mb-5.5">
-          <h2 className="text-white text-lg font-semibold">
-            Cadastrar Veículo
-          </h2>
+          <h2 className="text-white text-lg font-semibold">{title}</h2>
           <button
             onClick={onClose}
             className="text-neutral-500 hover:text-white cursor-pointer text-2xl font-light"
@@ -146,10 +157,17 @@ export default function VehicleFormModal({ onClose, onSave }) {
                 : "bg-neutral-900 text-neutral-600 cursor-not-allowed"
             }`}
           >
-            Salvar Veículo
+            {submitLabel}
           </button>
         </div>
       </div>
     </ModalOverlay>
   )
+}
+
+export default function VehicleFormModal(props) {
+  const modalKey =
+    props.initialVehicle?.id ?? props.initialVehicle?.plate ?? "new"
+
+  return <VehicleFormModalContent key={modalKey} {...props} />
 }

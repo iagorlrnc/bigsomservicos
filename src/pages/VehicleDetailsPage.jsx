@@ -3,18 +3,25 @@ import { useParams, useNavigate } from "react-router-dom"
 import ServiceCard from "../components/ServiceCard"
 import { statusConfig } from "../components/statusConfig"
 import ServiceFormModal from "../components/ServiceFormModal"
+import VehicleFormModal from "../components/VehicleFormModal"
 
 export default function VehicleDetailsPage({
   vehicles,
   services,
   updateService,
+  deleteService,
   addService,
+  updateVehicle,
+  deleteVehicle,
+  archiveVehicle,
   addToast,
   collaborators,
 }) {
   const { plate } = useParams()
   const navigate = useNavigate()
   const [showServiceForm, setShowServiceForm] = useState(false)
+  const [editingService, setEditingService] = useState(null)
+  const [editingVehicle, setEditingVehicle] = useState(false)
 
   const vehicle = vehicles.find(
     (v) =>
@@ -39,6 +46,8 @@ export default function VehicleDetailsPage({
   }
 
   const vServices = services.filter((s) => s.vehicle_id === vehicle.id)
+  const isFinished =
+    vServices.length > 0 && vServices.every((s) => s.status === "finalizado")
 
   const fmtDate = (d) => (d ? new Date(d).toLocaleDateString("pt-BR") : "-")
   const fmtCurrency = (v) =>
@@ -58,6 +67,57 @@ export default function VehicleDetailsPage({
     } catch (err) {
       console.error(err)
       addToast("Erro ao atualizar serviço.", "error")
+    }
+  }
+
+  const handleEditService = (svc) => {
+    setEditingService(svc)
+  }
+
+  const handleDeleteService = async (svc) => {
+    const confirmed = window.confirm(
+      `Remover o serviço "${svc.name}"? Essa ação não pode ser desfeita.`,
+    )
+    if (!confirmed) return
+
+    try {
+      await deleteService(svc.id)
+      addToast("Serviço removido.", "info")
+    } catch (err) {
+      console.error(err)
+      addToast("Erro ao remover serviço.", "error")
+    }
+  }
+
+  const handleDeleteVehicle = async () => {
+    const confirmed = window.confirm(
+      `Remover o veículo ${vehicle.plate}? Isso também removerá os serviços vinculados.`,
+    )
+    if (!confirmed) return
+
+    try {
+      await deleteVehicle(vehicle.id)
+      addToast("Veículo apagado.", "info")
+      navigate("/veiculos")
+    } catch (err) {
+      console.error(err)
+      addToast("Erro ao remover veículo.", "error")
+    }
+  }
+
+  const handleArchiveVehicle = async () => {
+    const confirmed = window.confirm(
+      `Deseja arquivar o veículo ${vehicle.plate} da tela?`,
+    )
+    if (!confirmed) return
+
+    try {
+      await archiveVehicle(vehicle.id)
+      addToast("Veículo ocultado.", "info")
+      navigate("/veiculos")
+    } catch (err) {
+      console.error(err)
+      addToast("Erro ao arquivar veículo.", "error")
     }
   }
 
@@ -85,6 +145,29 @@ export default function VehicleDetailsPage({
                 {vehicle.year} · {vehicle.color}
               </p>
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <button
+              onClick={() => setEditingVehicle(true)}
+              className="bg-white text-black hover:bg-neutral-200 font-semibold text-xs px-4 py-2.5 rounded-lg transition-all cursor-pointer"
+            >
+              Editar veículo
+            </button>
+            <button
+              onClick={handleDeleteVehicle}
+              className="bg-[#3b1111] text-red-200 hover:bg-red-950/30 font-semibold text-xs px-4 py-2.5 rounded-lg transition-all cursor-pointer border border-red-900/30"
+            >
+              Remover veículo
+            </button>
+            {isFinished && archiveVehicle && (
+              <button
+                onClick={handleArchiveVehicle}
+                className="bg-neutral-900 text-neutral-300 hover:bg-neutral-850 font-semibold text-xs px-4 py-2.5 rounded-lg transition-all cursor-pointer border border-neutral-800"
+              >
+                Arquivar veículo
+              </button>
+            )}
           </div>
 
           <div className="border-t border-neutral-950 pt-4 mt-3">
@@ -169,7 +252,13 @@ export default function VehicleDetailsPage({
 
       <div className="flex flex-col gap-2.5">
         {vServices.map((svc) => (
-          <ServiceCard key={svc.id} service={svc} onToggle={handleToggle} />
+          <ServiceCard
+            key={svc.id}
+            service={svc}
+            onToggle={handleToggle}
+            onEdit={handleEditService}
+            onDelete={handleDeleteService}
+          />
         ))}
         {vServices.length === 0 && (
           <div className="text-center py-16 text-neutral-600 text-xs bg-[#0d0d0d] border border-neutral-900 rounded-xl">
@@ -194,6 +283,63 @@ export default function VehicleDetailsPage({
             } catch (err) {
               console.error(err)
               addToast("Erro ao adicionar serviço.", "error")
+            }
+          }}
+        />
+      )}
+
+      {editingService && (
+        <ServiceFormModal
+          initialService={editingService}
+          collaborators={collaborators}
+          title="Editar Serviço"
+          submitLabel="Salvar Alterações"
+          onClose={() => setEditingService(null)}
+          onSave={async (s) => {
+            try {
+              await updateService(editingService.id, {
+                name: s.name,
+                description: s.description,
+                value: s.value,
+                responsible: s.responsible,
+                status: s.status,
+                completed_at:
+                  s.status === "finalizado"
+                    ? editingService.completed_at || new Date().toISOString()
+                    : null,
+              })
+              setEditingService(null)
+              addToast("Serviço atualizado!", "success")
+            } catch (err) {
+              console.error(err)
+              addToast("Erro ao atualizar serviço.", "error")
+            }
+          }}
+        />
+      )}
+
+      {editingVehicle && (
+        <VehicleFormModal
+          initialVehicle={vehicle}
+          title="Editar Veículo"
+          submitLabel="Salvar Alterações"
+          onClose={() => setEditingVehicle(false)}
+          onSave={async (v) => {
+            try {
+              await updateVehicle(vehicle.id, {
+                plate: v.plate,
+                brand: v.brand,
+                model: v.model,
+                year: parseInt(v.year),
+                color: v.color,
+                owner_name: v.owner_name,
+                owner_phone: v.owner_phone,
+              })
+              setEditingVehicle(false)
+              addToast("Veículo atualizado!", "success")
+            } catch (err) {
+              console.error(err)
+              addToast("Erro ao atualizar veículo.", "error")
             }
           }}
         />

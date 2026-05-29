@@ -1,15 +1,19 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import ServiceFormModal from "../components/ServiceFormModal"
 import { statusConfig } from "../components/statusConfig"
 
 export default function ServicesPage({
   vehicles,
   services,
   updateService,
+  deleteService,
+  collaborators = [],
   addToast,
 }) {
   const navigate = useNavigate()
   const [filter, setFilter] = useState("all")
+  const [editingService, setEditingService] = useState(null)
 
   const filtered =
     filter === "all" ? services : services.filter((s) => s.status === filter)
@@ -26,6 +30,49 @@ export default function ServicesPage({
         done ? "Serviço reaberto" : "Serviço finalizado! ✓",
         done ? "info" : "success",
       )
+    } catch (err) {
+      console.error(err)
+      addToast("Erro ao atualizar serviço.", "error")
+    }
+  }
+
+  const handleEdit = (svc) => {
+    setEditingService(svc)
+  }
+
+  const handleCancelService = async (svc) => {
+    const confirmed = window.confirm(
+      `Cancelar o serviço "${svc.name}"? Ele será removido do painel.`,
+    )
+    if (!confirmed) return
+
+    try {
+      await deleteService(svc.id)
+      addToast("Serviço cancelado e removido.", "info")
+    } catch (err) {
+      console.error(err)
+      addToast("Erro ao cancelar serviço.", "error")
+    }
+  }
+
+  const handleSaveEdit = async (form) => {
+    if (!editingService) return
+
+    try {
+      const nextStatus = form.status || editingService.status
+      await updateService(editingService.id, {
+        name: form.name,
+        description: form.description,
+        value: form.value,
+        responsible: form.responsible,
+        status: nextStatus,
+        completed_at:
+          nextStatus === "finalizado"
+            ? editingService.completed_at || new Date().toISOString()
+            : null,
+      })
+      addToast("Serviço atualizado.", "success")
+      setEditingService(null)
     } catch (err) {
       console.error(err)
       addToast("Erro ao atualizar serviço.", "error")
@@ -97,7 +144,9 @@ export default function ServicesPage({
                 <th className="px-5 py-3.5 text-[10px] text-neutral-600 font-bold uppercase tracking-wider hidden md:table-cell">
                   Data
                 </th>
-                <th className="px-5 py-3.5 text-[10px] text-neutral-600 font-bold uppercase tracking-wider"></th>
+                <th className="px-5 py-3.5 text-[10px] text-neutral-600 font-bold uppercase tracking-wider text-right">
+                  Ações
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-950/30 text-xs">
@@ -158,16 +207,30 @@ export default function ServicesPage({
                       {fmtDate(s.completed_at || s.created_at)}
                     </td>
                     <td className="px-5 py-4 text-right">
-                      <button
-                        onClick={() => handleToggle(s)}
-                        className={`px-3.5 py-1.5 rounded-lg text-[10px] font-semibold border cursor-pointer transition-all ${
-                          s.status === "finalizado"
-                            ? "bg-[#0a3d1f] border-emerald-500/20 text-[#34d980] hover:bg-emerald-900/15"
-                            : "bg-neutral-900 border-neutral-800 text-neutral-400 hover:bg-neutral-850 hover:text-neutral-200"
-                        }`}
-                      >
-                        {s.status === "finalizado" ? "✓ Feito" : "Finalizar"}
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleEdit(s)}
+                          className="px-3.5 py-1.5 rounded-lg text-[10px] font-semibold border cursor-pointer transition-all bg-neutral-900 border-neutral-800 text-neutral-300 hover:bg-neutral-850 hover:text-white"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleCancelService(s)}
+                          className="px-3.5 py-1.5 rounded-lg text-[10px] font-semibold border cursor-pointer transition-all bg-[#3b1111] border-red-900/30 text-red-300 hover:bg-red-950/30 hover:text-red-200"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          onClick={() => handleToggle(s)}
+                          className={`px-3.5 py-1.5 rounded-lg text-[10px] font-semibold border cursor-pointer transition-all ${
+                            s.status === "finalizado"
+                              ? "bg-[#0a3d1f] border-emerald-500/20 text-[#34d980] hover:bg-emerald-900/15"
+                              : "bg-neutral-900 border-neutral-800 text-neutral-400 hover:bg-neutral-850 hover:text-neutral-200"
+                          }`}
+                        >
+                          {s.status === "finalizado" ? "✓ Feito" : "Finalizar"}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 )
@@ -181,6 +244,17 @@ export default function ServicesPage({
           </div>
         )}
       </div>
+
+      {editingService && (
+        <ServiceFormModal
+          initialService={editingService}
+          collaborators={collaborators}
+          title="Editar Serviço"
+          submitLabel="Salvar Alterações"
+          onClose={() => setEditingService(null)}
+          onSave={handleSaveEdit}
+        />
+      )}
     </div>
   )
 }

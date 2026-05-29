@@ -1,6 +1,11 @@
 import { statusConfig } from "./statusConfig"
 
-export default function ServiceCard({ service: s, onToggle }) {
+export default function ServiceCard({
+  service: s,
+  onToggle,
+  onEdit,
+  onDelete,
+}) {
   const done = s.status === "finalizado"
   const cfg = statusConfig[s.status] || statusConfig.aguardando
 
@@ -42,19 +47,43 @@ export default function ServiceCard({ service: s, onToggle }) {
                 {s.description}
               </div>
             </div>
-            <div className="text-right flex-shrink-0">
-              <div
-                className={`text-[15px] font-bold font-serif ${
-                  done ? "text-[#34d980]" : "text-amber-500"
-                }`}
-              >
-                {fmtCurrency(s.value)}
-              </div>
-              <div
-                className={`inline-flex items-center gap-1.5 mt-1.5 px-2 py-0.5 rounded-md border text-[10px] ${cfg.bgClass}`}
-              >
-                <span className={`w-1 h-1 rounded-full ${cfg.dotClass}`} />
-                <span>{cfg.label}</span>
+
+            <div className="flex items-center justify-end gap-2 flex-wrap sm:flex-nowrap">
+              {(onEdit || onDelete) && (
+                <div className="flex items-center gap-2 flex-wrap justify-end">
+                  {onEdit && (
+                    <button
+                      onClick={() => onEdit(s)}
+                      className="px-3.5 py-1.5 rounded-lg text-[10px] font-semibold border cursor-pointer transition-all bg-neutral-900 border-neutral-800 text-neutral-300 hover:bg-neutral-850 hover:text-white"
+                    >
+                      Editar
+                    </button>
+                  )}
+                  {onDelete && (
+                    <button
+                      onClick={() => onDelete(s)}
+                      className="px-3.5 py-1.5 rounded-lg text-[10px] font-semibold border cursor-pointer transition-all bg-[#3b1111] border-red-900/30 text-red-300 hover:bg-red-950/30 hover:text-red-200"
+                    >
+                      Cancelar
+                    </button>
+                  )}
+                </div>
+              )}
+
+              <div className="text-right flex-shrink-0">
+                <div
+                  className={`text-[15px] font-bold font-serif ${
+                    done ? "text-[#34d980]" : "text-amber-500"
+                  }`}
+                >
+                  {fmtCurrency(s.value)}
+                </div>
+                <div
+                  className={`inline-flex items-center gap-1.5 mt-1.5 px-2 py-0.5 rounded-md border text-[10px] ${cfg.bgClass}`}
+                >
+                  <span className={`w-1 h-1 rounded-full ${cfg.dotClass}`} />
+                  <span>{cfg.label}</span>
+                </div>
               </div>
             </div>
           </div>

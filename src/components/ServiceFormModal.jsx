@@ -13,18 +13,29 @@ const SERVICE_TYPES = [
   "Outro",
 ]
 
-export default function ServiceFormModal({
+function buildServiceForm(initialService) {
+  return {
+    name: initialService?.name || "",
+    description: initialService?.description || "",
+    value:
+      initialService?.value === undefined || initialService?.value === null
+        ? ""
+        : String(initialService.value),
+    responsible: initialService?.responsible || "",
+    status: initialService?.status || "aguardando",
+  }
+}
+
+function ServiceFormModalContent({
   onClose,
   onSave,
   collaborators = [],
+  initialService = null,
+  title = "Novo Serviço",
+  submitLabel = "Adicionar Serviço",
 }) {
-  const [form, setForm] = useState({
-    name: "",
-    description: "",
-    value: "",
-    responsible: "",
-    status: "aguardando",
-  })
+  const [form, setForm] = useState(() => buildServiceForm(initialService))
+
   const ok = form.name && form.value && form.responsible
 
   const handleSubmit = () => {
@@ -39,7 +50,7 @@ export default function ServiceFormModal({
     <ModalOverlay onClose={onClose}>
       <div className="bg-[#0d0d0d] border border-neutral-900 rounded-2xl p-5 sm:p-7 w-full max-w-[480px] max-h-[calc(100vh-3rem)] overflow-y-auto animate-scale-up">
         <div className="flex justify-between items-center mb-5.5">
-          <h2 className="text-white text-lg font-semibold">Novo Serviço</h2>
+          <h2 className="text-white text-lg font-semibold">{title}</h2>
           <button
             onClick={onClose}
             className="text-neutral-500 hover:text-white cursor-pointer text-2xl font-light"
@@ -102,6 +113,18 @@ export default function ServiceFormModal({
           </FormField>
         </div>
 
+        <FormField label="Status">
+          <select
+            value={form.status}
+            onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
+            className="w-full bg-[#0a0a0a] border border-neutral-800 rounded-lg text-neutral-350 px-3.5 py-2.5 text-xs outline-none focus:border-neutral-700 focus:ring-1 focus:ring-neutral-700 transition-all"
+          >
+            <option value="aguardando">Aguardando</option>
+            <option value="em_andamento">Em Andamento</option>
+            <option value="finalizado">Finalizado</option>
+          </select>
+        </FormField>
+
         <div className="flex gap-2.5 mt-5">
           <button
             onClick={onClose}
@@ -118,10 +141,17 @@ export default function ServiceFormModal({
                 : "bg-neutral-900 text-neutral-600 cursor-not-allowed"
             }`}
           >
-            Adicionar Serviço
+            {submitLabel}
           </button>
         </div>
       </div>
     </ModalOverlay>
   )
+}
+
+export default function ServiceFormModal(props) {
+  const modalKey =
+    props.initialService?.id ?? props.initialService?.name ?? "new"
+
+  return <ServiceFormModalContent key={modalKey} {...props} />
 }
