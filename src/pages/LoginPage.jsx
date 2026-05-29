@@ -9,8 +9,8 @@ export default function LoginPage() {
   const [mode, setMode] = useState("login"); // "login" | "register" | "pending"
   
   // Login fields
-  const [email, setEmail] = useState("admin@bigsom.com");
-  const [pass, setPass] = useState("bigsom2024");
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
   
   // Registration fields
   const [name, setName] = useState("");
