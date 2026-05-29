@@ -74,6 +74,9 @@ export default function Sidebar({
             <div className="text-white font-bold text-sm tracking-wider">
               BIGSOM
             </div>
+            <p className="text-[#34d980] text-[10px] uppercase font-semibold tracking-wider">
+              Administrador
+            </p>
           </div>
           {!collapsed && (
             <button

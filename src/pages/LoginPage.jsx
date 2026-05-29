@@ -287,7 +287,7 @@ export default function LoginPage() {
               <Input
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                type="text"
+                type="phone"
                 placeholder="(63) 99999-0000"
               />
             </FormField>

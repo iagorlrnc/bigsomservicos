@@ -636,6 +636,15 @@ function AppContent() {
     : sessionStorage.getItem("offline_role") === "admin"
 
   if (!isAdmin) {
+    // For collaborator panel, only show active (non-archived) vehicles and their services
+    const collabActiveVehicles = vehicles.filter((v) => v.archived !== true)
+    const collabActiveVehicleIds = new Set(
+      collabActiveVehicles.map((v) => v.id),
+    )
+    const collabActiveServices = services.filter((s) =>
+      collabActiveVehicleIds.has(s.vehicle_id),
+    )
+
     return (
       <div className="min-h-screen bg-[#050505] text-[#ccc] font-sans">
         {!isSupabaseConfigured && (
@@ -651,8 +660,8 @@ function AppContent() {
             path="/colaborador"
             element={
               <CollaboratorPage
-                vehicles={vehicles}
-                services={services}
+                vehicles={collabActiveVehicles}
+                services={collabActiveServices}
                 updateService={handleUpdateService}
                 addToast={addToast}
               />
@@ -662,8 +671,8 @@ function AppContent() {
             path="/colaborador/:plate"
             element={
               <CollaboratorPage
-                vehicles={vehicles}
-                services={services}
+                vehicles={collabActiveVehicles}
+                services={collabActiveServices}
                 updateService={handleUpdateService}
                 addToast={addToast}
               />
