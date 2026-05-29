@@ -10,11 +10,20 @@ const SERVICE_TYPES = [
   "Outro",
 ]
 
-export default function DashboardPage({ vehicles, services }) {
+export default function DashboardPage({
+  vehicles,
+  services,
+  dashboardServices,
+}) {
   const navigate = useNavigate()
-  const finalized = services.filter((s) => s.status === "finalizado").length
-  const inProgress = services.filter((s) => s.status === "em_andamento").length
-  const totalRevenue = services
+  const statsServices = dashboardServices || services
+  const finalized = statsServices.filter(
+    (s) => s.status === "finalizado",
+  ).length
+  const inProgress = statsServices.filter(
+    (s) => s.status === "em_andamento",
+  ).length
+  const totalRevenue = statsServices
     .filter((s) => s.status === "finalizado")
     .reduce((acc, s) => acc + s.value, 0)
 
@@ -72,7 +81,7 @@ export default function DashboardPage({ vehicles, services }) {
 
   const topServices = SERVICE_TYPES.map((name) => ({
     name,
-    count: services.filter((service) => service.name === name).length,
+    count: statsServices.filter((service) => service.name === name).length,
   }))
     .filter((service) => service.count > 0)
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "pt-BR"))
@@ -80,9 +89,7 @@ export default function DashboardPage({ vehicles, services }) {
   return (
     <div>
       <h1 className="text-white text-2xl font-semibold mb-1">Dashboard</h1>
-      <p className="text-neutral-500 text-xs mb-7">
-        Visão geral
-      </p>
+      <p className="text-neutral-500 text-xs mb-7">Visão geral</p>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -123,7 +130,9 @@ export default function DashboardPage({ vehicles, services }) {
           </div>
           <div className="divide-y divide-neutral-950">
             {recentVehicles.map((v) => {
-              const vServices = services.filter((s) => s.vehicle_id === v.id)
+              const vServices = statsServices.filter(
+                (s) => s.vehicle_id === v.id,
+              )
               const done = vServices.filter(
                 (s) => s.status === "finalizado",
               ).length
@@ -176,9 +185,11 @@ export default function DashboardPage({ vehicles, services }) {
             </h3>
             <div className="space-y-3.5">
               {Object.entries(statusConfig).map(([key, cfg]) => {
-                const count = services.filter((s) => s.status === key).length
-                const pct = services.length
-                  ? Math.round((count / services.length) * 100)
+                const count = statsServices.filter(
+                  (s) => s.status === key,
+                ).length
+                const pct = statsServices.length
+                  ? Math.round((count / statsServices.length) * 100)
                   : 0
                 return (
                   <div key={key}>

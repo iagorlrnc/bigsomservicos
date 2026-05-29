@@ -707,6 +707,7 @@ function AppContent() {
   const props = {
     vehicles: activeVehicles,
     services: activeServices,
+    dashboardServices: services,
     collaborators: approvedCollaborators,
     addToast,
     addVehicle: handleAddVehicle,
